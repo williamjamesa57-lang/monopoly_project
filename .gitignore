@@ -1,0 +1,152 @@
+# Build artifacts
+build/
+cmake-build-*/
+bindings/*.so
+bindings/*.pyd
+bindings/*.dylib
+python/Monopoly_Env/*.so
+python/Monopoly_Env/*.pyd
+python/Monopoly_Env/*.dylib
+
+# C++ build files
+*.o
+*.a
+*.lib
+*.dll
+*.exe
+*.out
+*.obj
+*.pdb
+*.ilk
+*.exp
+*.iobj
+*.ipdb
+
+# CMake files
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+compile_commands.json
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+.ENV
+.python-version
+.pytest_cache/
+.coverage
+htmlcov/
+.pyup.yml
+.requirements.bak
+requirements-local.txt
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Virtual Environments
+.venv/
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Data/ML
+data/
+models/
+runs/
+logs/
+wandb/
+mlruns/
+*.bin
+*.pt
+*.pth
+*.ckpt
+*.onnx
+*.pb
+*.tflite
+
+# Conda
+conda-meta/
+.conda/
+.condarc
+
+# Artifacts from your project
+*.csv  # Keep if you have important CSVs, remove otherwise
+*.json  # Keep if you have important JSONs, remove otherwise
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+VolumeIcon.icns
+
+# Logs
+*.log
+logs/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# Documentation
+docs/_build/
+
+# Coverage reports
+coverage.xml
+*.gcov
+*.lcov
+
+# Environment specific
+.env
+.env.local
+.env.production
+.env.development
+
+# PyInstaller
+dist/
+specfiles/
+
+# CLion specific (if you switch back)
+cmake-build-*/
+*.iws
+*.ipr
+*.iml
+
+# WSL specific
+AppData/
+LocalSettings/
+Temp/
+
+# MLflow
+mlruns/
+mlartifacts/
+
+# Sacred
+runs/
+
+# DVC
+.dvc/
+
+# FastAPI/Sanic
+*.db
+*.db-journal
+
+# Poetry
+poetry.lock
