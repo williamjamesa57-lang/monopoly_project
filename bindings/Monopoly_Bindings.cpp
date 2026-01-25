@@ -1,7 +1,3 @@
-//
-// Created by willi on 12/01/2026.
-//
-
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include "../include/Monopoly_Core.h"
@@ -15,7 +11,7 @@ PYBIND11_MODULE(monopoly_cpp,m) {
         .def("get_cash", &Board::get_cash)
         .def("update_cash", &Board::update_cash)
         .def("get_tile_details", &Board::get_tile_details)
-        .def("purchase_tile", &Board::purchase_tile);
+        .def("modify_tile_info", &Board::modify_tile_info);
     
     pybind11::enum_<Tile_type>(m, "Tile_type")
         .value("PROPERTY", Tile_type::PROPERTY)
@@ -30,7 +26,10 @@ PYBIND11_MODULE(monopoly_cpp,m) {
         .def_readwrite("name", &Tile_info::name)
         .def_readwrite("owner", &Tile_info::owner)
         .def_readwrite("purchase_price", &Tile_info::purchase_price)
-        .def_readwrite("base_rent", &Tile_info::base_rent);
+        .def_readwrite("base_rent", &Tile_info::base_rent)
+      .def_readwrite("house_count", &Tile_info::house_count)
+      .def_readwrite("is_mortgaged", &Tile_info::is_mortgaged)
+      .def_readwrite("has_monopoly", &Tile_info::has_monopoly);
 
     m.def("create_game",[]() {return Board();});
 }

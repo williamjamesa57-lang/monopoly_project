@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <iterator>
+#include <stdexcept>
 #include "../include/Monopoly_Tile_Lookup.h"
 
 Tile_info set_tax_tiles(int tax){
@@ -26,14 +27,28 @@ Tile_info set_chance_tiles(int type){
 
 Monopoly_Tile_Lookup::Monopoly_Tile_Lookup(){
     Tile_type default_type = PROPERTY;
-    Tile_info default_tile = {default_type, "tile", -1, 10,0};
-    std::fill(std::begin(tile_lookup), std::end(tile_lookup), default_tile);
+    Tile_info default_tile = {default_type,
+			      "tile",
+			      -1,
+			      10,
+			      0,
+			      0,
+			      false,
+			      false};
+    std::fill(std::begin(tile_lookup),
+	      std::end(tile_lookup),
+	      default_tile);
+    
     set_special_tiles();
 }
 
 void Monopoly_Tile_Lookup::set_special_tiles(){
     Tile_type corner_type = CORNER;
-    std::array<std::string, 4> corner_names{{"GO", "Jail/Visiting", "Free Parking", "Go To Jail"}};
+    std::array<std::string, 4> corner_names{
+      {"GO",
+       "Jail/Visiting",
+       "Free Parking",
+       "Go To Jail"}};
 
     for(int i = 0; i < 40; i+=10){
         tile_lookup[i].type = corner_type;
@@ -53,11 +68,30 @@ void Monopoly_Tile_Lookup::set_special_tiles(){
     tile_lookup[36] = set_chance_tiles(0); 
 }
 
-Tile_info Monopoly_Tile_Lookup::get_tile(const int position) const{
+const Tile_info& Monopoly_Tile_Lookup::get_tile(const int position) const{
+  bool is_in_range = position >= 0 && position < tile_lookup.size();
+
+  if(is_in_range){
     return tile_lookup[position];
+  }
+  else{
+    throw std::out_of_range("Invalid Tile Position!");
+  }
 }
 
-void Monopoly_Tile_Lookup::set_tile_owner(const int position, const int player_number){
-    tile_lookup[position].owner = player_number;
+const std::array<Tile_info, 40>& Monopoly_Tile_Lookup::get_all_tiles() const{
+  return tile_lookup;
+}
+
+void Monopoly_Tile_Lookup::update_tile(const int position,
+		 const Tile_info& new_tile_info){
+  bool is_in_range = position >= 0 && position < tile_lookup.size();
+
+  if (is_in_range){
+    tile_lookup[position] = new_tile_info;
+  }
+  else{
+    throw std::out_of_range("Invalid Tile Position!");
+  }
 }
 

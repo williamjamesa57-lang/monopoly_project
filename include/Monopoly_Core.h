@@ -29,8 +29,9 @@ public:
     int get_current_player_position() const;
     int get_cash() const;
     void update_cash(const int additive);
+  
     Tile_info get_tile_details() const;
-    Tile_info purchase_tile();
+  void modify_tile_info(const Tile_info& new_tile_info);
 };
 
 #endif //MONOPOLY_PROJECT_MONOPOLY_CORE_H

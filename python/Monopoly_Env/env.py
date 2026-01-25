@@ -3,22 +3,95 @@ import numpy as np
 
 from monopoly_cpp import create_game
 
+ACTION_MEANINGS = {
+    0 : "roll_dice",
+    1 : "purchase_property",
+    2 : "build_house",
+    3 : "mortgage_property",
+    4 : "unmortgage_property",
+    5 : "skip_action",    
+}   
+
+
 class MonopolyEnv(gym.Env):
     def __init__(self):
         super().__init__()
         self.game = create_game()
-        self.action_space = gym.spaces.Discrete(2)  # Simplified: 0=roll, 1=buy
-        self.observation_space = gym.spaces.Box(
-            low=0, high=1, shape=(40,), dtype=np.float32
-        )
+        self.action_space = gym.spaces.Discrete(len(ACTION_MEANINGS))
+        self.observation_space = gym.spaces.Dict({
+            "position" : gym.spaces.Discrete(40),
+            "cash" : gym.spaces.Box(
+                low = 0,
+                high = 10000,
+                shape = (1,),
+                dtype = np.float32
+            ),
+            "properties_owned" : gym.spaces.MultiBinary(28),
+            "houses_built" : gym.spaces.Box(
+                low = 0,
+                high = 5,
+                shape = (28, ),
+                dtype = np.int32,
+            ),
+            "mortgaged_properties" : gym.spaces.MultiBinary(28)
+        })
 
-    def step(self, action):
-        if action == 0:  
-            self.game.roll_dice()
+    def step(self, action_idx):
+        action = ACTION_MEANINGS[action_idx]
         
-        reward = 0
+        reward = 0.0
         position = self.game.get_current_player_position()
         tile_state = self.game.get_tile_details()
+
+        if action == "roll_dice":
+            self.game.roll_dice()
+            new_position = self.game.get_current_player_position()
+            new_tile_state = self.game.get_tile_details()
+            # handle tile landings
+            
+        elif action == "purchase_property":
+            if tile_state.owner == -1: # to update if player can afford
+                new_tile_copy = tile_state
+                new_tile_copy.owner = 0
+                self.game.modify_tile_info(new_tile_copy)
+                self.game.update_cash(-new_tile_copy.purchase_price)
+                reward -= new_tile_copy.purchase_price
+
+                #to update make a color monopoly feature
+        
+        elif action == "build_house":
+            if True: # to make a validity check
+                new_tile_copy = tile_state
+                new_tile_copy.house_count += 1
+                self.game.modify_tile_info(new_tile_copy)
+                cost = 0 #new_tile_copy.house_cost
+                self.game.update_cash(-cost)
+                reward -= cost
+                # to do include monopoly development feature
+                
+        elif action == "mortgage_property":
+            if True: # to do mortgage check
+                new_tile_copy = tile_state
+                new_tile_copy.is_mortgaged = True
+                self.game.modify_tile_info(new_tile_copy)
+                cash_received = 0 # to do make the mortgage valuation feature
+                self.game.update_cash(cash_received)
+                reward += cash_received
+
+                # to do make a strategic property mortgage penalizer
+                
+        elif action == "unmortgage_property":
+            if True: # to do unmortgage check
+                new_tile_copy = tile_state
+                new_tile_copy.is_mortgaged = False
+                self.game.modify_tile_info(new_tile_copy)
+                cost = 0 # to do unmortgage valuations feature
+                self.game.update_cash(-cost)
+
+                reward -= cost
+                
+        elif action == "skip_action":
+            reward -= 1
 
         if not tile_state.type == tile_state.type.PROPERTY:
             if tile_state.type == tile_state.type.CORNER:
@@ -36,14 +109,13 @@ class MonopolyEnv(gym.Env):
         else:
             current_action = self.action_space.sample()
             if current_action == 1:
-                print(f"Pre pruchase: {tile_state.owner}")
-                tile_state = self.game.purchase_tile()
+                tile_state.owner = 0;
                 reward = -1 * tile_state.purchase_price
-                print(f"Post pruchase: {tile_state.owner}")
             else:
                 reward = 0
 
         self.game.update_cash(reward)
+        self.game.modify_tile_info(tile_state)
         done = False
 
         if self.game.get_cash() < 1:
@@ -54,3 +126,6 @@ class MonopolyEnv(gym.Env):
     def reset(self):
         self.game = create_game()
         return np.array(self.game.get_state(), dtype=np.float32)
+
+    def landing_protocol(self):
+        pass

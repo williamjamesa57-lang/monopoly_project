@@ -69,8 +69,6 @@ Tile_info Board::get_tile_details() const{
     return tile_lookup.get_tile(current_player_position);
 }
 
-Tile_info Board::purchase_tile(){
-    tile_lookup.set_tile_owner(current_player_position, 0);
-    return tile_lookup.get_tile(current_player_position);
-
+void Board::modify_tile_info(const Tile_info& new_tile_info) {
+  tile_lookup.update_tile(current_player_position, new_tile_info);
 }
