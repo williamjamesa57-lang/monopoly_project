@@ -2,6 +2,7 @@ import gymnasium as gym
 import numpy as np
 
 from monopoly_cpp import create_game
+from monopoly_cpp import Tile_type
 
 ACTION_MEANINGS = {
     0 : "roll_dice",
@@ -11,7 +12,6 @@ ACTION_MEANINGS = {
     4 : "unmortgage_property",
     5 : "skip_action",    
 }   
-
 
 class MonopolyEnv(gym.Env):
     def __init__(self):
@@ -38,39 +38,40 @@ class MonopolyEnv(gym.Env):
 
     def step(self, action_idx):
         action = ACTION_MEANINGS[action_idx]
-        
         reward = 0.0
         position = self.game.get_current_player_position()
         tile_state = self.game.get_tile_details()
+
 
         if action == "roll_dice":
             self.game.roll_dice()
             new_position = self.game.get_current_player_position()
             new_tile_state = self.game.get_tile_details()
-            # handle tile landings
+            reward += self.landing_protocol(new_tile_state)
             
         elif action == "purchase_property":
-            if tile_state.owner == -1: # to update if player can afford
+            if tile_state.owner == -1 and self._can_afford(tile_state,tile_state.house_price):
                 new_tile_copy = tile_state
                 new_tile_copy.owner = 0
                 self.game.modify_tile_info(new_tile_copy)
                 self.game.update_cash(-new_tile_copy.purchase_price)
                 reward -= new_tile_copy.purchase_price
-
+                print("purchased")
                 #to update make a color monopoly feature
         
         elif action == "build_house":
-            if True: # to make a validity check
+            if self._can_build_house(tile_state, 0):
                 new_tile_copy = tile_state
                 new_tile_copy.house_count += 1
                 self.game.modify_tile_info(new_tile_copy)
-                cost = 0 #new_tile_copy.house_cost
+                cost = new_tile_copy.house_price
                 self.game.update_cash(-cost)
                 reward -= cost
+                
                 # to do include monopoly development feature
                 
         elif action == "mortgage_property":
-            if True: # to do mortgage check
+            if self._can_mortgage(tile_state, 0):
                 new_tile_copy = tile_state
                 new_tile_copy.is_mortgaged = True
                 self.game.modify_tile_info(new_tile_copy)
@@ -81,7 +82,7 @@ class MonopolyEnv(gym.Env):
                 # to do make a strategic property mortgage penalizer
                 
         elif action == "unmortgage_property":
-            if True: # to do unmortgage check
+            if self._can_unmortgage(tile_state, 0):
                 new_tile_copy = tile_state
                 new_tile_copy.is_mortgaged = False
                 self.game.modify_tile_info(new_tile_copy)
@@ -93,29 +94,6 @@ class MonopolyEnv(gym.Env):
         elif action == "skip_action":
             reward -= 1
 
-        if not tile_state.type == tile_state.type.PROPERTY:
-            if tile_state.type == tile_state.type.CORNER:
-                if tile_state.name == "Jail":
-                    reward = -50
-                elif tile_state.name == "GO":
-                    reward = 200
-            elif tile_state.type == tile_state.type.TAX:
-                if tile_state.name == "Income Tax":
-                    reward = -200
-                elif tile_state.name == "Luxury Tax":
-                    reward = - 100
-            elif tile_state.type == tile_state.type.CARD:
-                pass
-        else:
-            current_action = self.action_space.sample()
-            if current_action == 1:
-                tile_state.owner = 0;
-                reward = -1 * tile_state.purchase_price
-            else:
-                reward = 0
-
-        self.game.update_cash(reward)
-        self.game.modify_tile_info(tile_state)
         done = False
 
         if self.game.get_cash() < 1:
@@ -127,5 +105,49 @@ class MonopolyEnv(gym.Env):
         self.game = create_game()
         return np.array(self.game.get_state(), dtype=np.float32)
 
-    def landing_protocol(self):
-        pass
+    def landing_protocol(self, tile_state):
+        reward = 0.0
+
+        if not tile_state.type == tile_state.type.PROPERTY:
+            if tile_state.type == tile_state.type.CORNER:
+                if tile_state.name == "Jail":
+                    reward = -50
+                elif tile_state.name == "GO":
+                    reward += 200
+            elif tile_state.type == tile_state.type.TAX:
+                reward -= tile_state.purchase_price
+            elif tile_state.type == tile_state.type.CARD:
+                pass
+        else:
+            current_action = self.action_space.sample()
+            if current_action == 1:
+                tile_state.owner = 0
+                reward = -1 * tile_state.purchase_price
+            else:
+                reward = 0
+
+        return reward
+
+    def _can_afford(self, tile, cost):
+        my_tile_info = Tile_type.PROPERTY
+        tile_legibility = tile.type == my_tile_info
+        can_afford = self.game.get_cash() > cost
+        return can_afford and tile_legibility
+
+    def _can_build_house(self, tile, player_number):
+        my_tile_info = Tile_type.PROPERTY
+        ownership_check = tile.owner == player_number
+        affordability_check = self.game.get_cash() > tile.house_price
+        tile_legibility = tile.type == my_tile_info
+        max_five_house_check = not (tile.house_count >= 5)
+        return ownership_check and affordability_check and max_five_house_check and tile_legibility
+
+    def _can_mortgage(self, tile, player_number):
+        can_mortgage = tile.is_mortgaged == False
+        is_owner = tile.owner == player_number
+        return can_mortgage and is_owner
+
+    def _can_unmortgage(self, tile, player_number):
+        can_unmortgage = tile.is_mortgaged == True
+        is_owner = tile.owner == player_number
+        return can_unmortgage and is_owner

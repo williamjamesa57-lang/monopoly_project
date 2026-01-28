@@ -6,7 +6,7 @@
 
 Board::Board() :
     rng(std::make_unique<std::mt19937>(std::random_device{}())),
-    cash(100),
+    cash(500),
     tile_lookup(Monopoly_Tile_Lookup()){
 }
 
